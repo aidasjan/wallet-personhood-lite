@@ -1,26 +1,22 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import axios from 'axios';
+import { ethers } from 'ethers';
+import { GoogleService } from 'src/api/google/google.service';
 
 @Injectable()
 export class VerificationService {
+  constructor(private readonly googleService: GoogleService) {}
+
   async verify(address: string, token: string) {
-    try {
-      const url = `https://www.google.com/recaptcha/api/siteverify`;
-      const params = new URLSearchParams();
-      params.append('secret', process.env.RECAPTHA_SECRET_KEY as string);
-      params.append('response', token);
-
-      const response = await axios.post(url, params);
-
-      const { success } = response.data;
-
-      if (!success) {
-        throw new BadRequestException('Failed CAPTCHA verification');
-      }
-
-      return true;
-    } catch (error) {
-      throw new BadRequestException('CAPTCHA validation error');
+    const isTokenValid = await this.googleService.verifyToken(token);
+    if (!isTokenValid) {
+      throw new BadRequestException('Token is invalid');
     }
+    const wallet = new ethers.Wallet(
+      process.env.SIGNER_PRIVATE_KEY as string,
+    );
+    const hashed = ethers.solidityPackedKeccak256(['address'], [address]);
+    const arrayified = ethers.getBytes(hashed);
+    const signature = await wallet.signMessage(arrayified);
+    return signature;
   }
 }

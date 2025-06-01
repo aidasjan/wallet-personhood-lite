@@ -1,0 +1,1 @@
+export const verifierAddress = '0x8C6E4aAf0A8D0EF393aE16Ba6aBE61Be6251671e'

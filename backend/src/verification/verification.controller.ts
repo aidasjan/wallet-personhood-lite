@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { VerificationRequestDto } from './dto/verification-request.dto';
 
@@ -7,7 +7,8 @@ export class VerificationController {
   constructor(private readonly appService: VerificationService) {}
 
   @Post()
-  verify(@Body() body: VerificationRequestDto) {
-    return this.appService.verify(body.address, body.token);
+  async verify(@Body() body: VerificationRequestDto) {
+    const signature = await this.appService.verify(body.address, body.token);
+    return { signature };
   }
 }

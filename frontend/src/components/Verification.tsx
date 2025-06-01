@@ -1,9 +1,13 @@
 "use client";
+import { verifierAddress } from "@/config/verifier";
+import { config } from "@/config/wagmi";
 import { Box, Button } from "@chakra-ui/react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useAccount } from "wagmi";
+import { writeContract } from "wagmi/actions";
+import verifierAbi from "@/config/abi/AddressVerifier.json";
 
 export default function Verification() {
   const { address } = useAccount();
@@ -20,7 +24,14 @@ export default function Verification() {
     });
 
     const data = await res.json();
-    console.log(data);
+    const signature = data.signature;
+
+    await writeContract(config, {
+      abi: verifierAbi,
+      address: verifierAddress,
+      functionName: "submitVerification",
+      args: [signature],
+    });
   };
 
   return (
